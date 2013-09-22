@@ -1,0 +1,88 @@
+<html>
+    <head>
+        <title>Google Calendar agenda demo</title>
+    </head>
+<body>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
+<script type="text/javascript"><!--
+
+jQuery(document).ready(function() {
+    var time_min = new Date();
+    var time_max = new Date(time_min.getTime() + 7*24*60*60*1000);
+
+    jQuery.ajax("https://www.googleapis.com/calendar/v3/calendars/vdh4b672fa127p5mgi4ftksms4%40group.calendar.google.com/events?key=" + googleApiKey + "&singleEvents=true&orderBy=startTime&timeMax=" + time_max.toISOString() + "&timeMin=" + time_min.toISOString(), { datatype: "jsonp" })
+        .error(function(data) {
+            jQuery("#calendar_agenda").empty();
+            jQuery("#calendar_agenda").append("<li><em>An error occured while retrieving calendar details. Sorry! You can try accessing <a href='https://www.google.com/calendar/embed?src=vdh4b672fa127p5mgi4ftksms4%40group.calendar.google.com&ctz=America/Denver&mode=AGENDA'>the calendar directly</a>, or contact the webmaster for more assistance.</em></li>");
+        })
+        .done(function(data) {
+            jQuery("#calendar_agenda").empty();
+            
+            if(!data.items) {
+                data = jQuery.parseJSON(data);
+            }
+
+            data.items.forEach(function(item) {
+                var li_item = jQuery("<li>");
+                li_item.append(jQuery("<span>").text(item.summary));
+
+                var information = jQuery("<ul>");
+                li_item.append(information);
+
+                // From: http://stackoverflow.com/a/37687/27310
+                function replaceURLWithHTMLLinks(text) {
+                    var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+                    return text.replace(exp,"<a href='$1'>$1</a>"); 
+                }
+
+                var description = jQuery("<li>");
+                description.html(replaceURLWithHTMLLinks(item.description));
+                information.append(description);
+
+                var date = jQuery("<li>");
+                var start_date = new Date(item.start.dateTime);
+
+                var months = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ];
+                var days_of_week = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
+
+                var datestring = days_of_week[start_date.getDay()] + ", " +
+                    months[start_date.getMonth()] + " " +
+                    start_date.getDate() + ", " +
+                    start_date.getFullYear();
+
+                var hours = start_date.getHours();
+                var minutes = start_date.getMinutes();
+                var am_pm = "am";
+
+                if(hours > 12) {
+                    hours = hours - 12;
+                    am_pm = "pm";
+                }
+
+                var timestring = hours + ":" + minutes + " " + am_pm;
+                if(minutes < 10) {
+                    timestring = hours + ":0" + minutes + " " + am_pm;
+                }
+
+                date.html("<strong>Time:</strong> " + datestring + " at " + timestring);
+                information.append(date);
+
+                var location = jQuery("<li>");
+                location.html("<strong>Location:</strong> " + item.location);
+
+                information.append(location);
+
+                jQuery("#calendar_agenda").append(li_item);
+            });
+
+            jQuery("#calendar_agenda").append("<li><a href='https://www.google.com/calendar/embed?src=vdh4b672fa127p5mgi4ftksms4%40group.calendar.google.com&ctz=America/Denver&mode=AGENDA'>See all upcoming events on Google Calendar</a></li>");
+
+            jQuery("#calendar_agenda").append("<li><a href='https://www.google.com/calendar/ical/vdh4b672fa127p5mgi4ftksms4%40group.calendar.google.com/public/basic.ics'>Subscribe to this calendar using iCal</a></li>");
+        });
+});
+
+//--></script>
+
+</body>
+</html>
